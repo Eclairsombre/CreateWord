@@ -1,4 +1,4 @@
-rank,word_fr,word_en,tag,phrase_fr,phrase_en
+rank,word,word_en,tag,phrase_fr,phrase_en
 1,le,"pro the; him, her, it, them","det,"," vive la politique, vive l'amour "," long live politics, long live love "
 2,de,"prep of, from, some, any","det,", il ne rêve que d'argent et de plaisirs , he only dreams of money and pleasure 
 3,un,"det, nm, pro a, an, one","adj,", je me suis cassé un ongle , I broke one of my fingernails 

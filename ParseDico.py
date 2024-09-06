@@ -2,15 +2,15 @@ import csv
 import json
 import random
 
-def parseDico():
+def parseDico(dico,nameOutput):
     
     
     
-    result = {chr(i): {"PlaceInWord": {}, "NbOccurence": 0, "LetterBefore": {}, "LetterBeforeOne": {}, "Bigrams": {}, "Trigrams": {}} for i in range(ord('a'), ord('z')+1)}
-    with open('Fr.csv', 'r') as csvfile:
+    result = {chr(i): {"PlaceInWord": {}, "NbOccurence": 0, "LetterBefore": {}, "LetterBeforeOne": {}} for i in range(ord('a'), ord('z')+1)}
+    with open(dico, 'r') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            word = row['a']
+            word = row['word']
             for elt in range(0, len(word)):
                 letter = word[elt].lower()
                
@@ -35,21 +35,21 @@ def parseDico():
                         result[letter]["LetterBeforeOne"][word[elt-2].lower()] = 1
                     else:
                         result[letter]["LetterBeforeOne"][word[elt-2].lower()] += 1
-    with open('output.json', 'w') as outfile:
+    with open(nameOutput, 'w') as outfile:
         json.dump(result, outfile)
     
-def countNbLetter():
-    with open('Fr.csv', 'r') as csvfile:
+def countNbLetter(dico):
+    with open(dico, 'r') as csvfile:
         reader = csv.DictReader(csvfile)
         count = 0
         for row in reader:
-            for letter in row['a']:
+            for letter in row['word']:
                 if letter.isalpha():
                     count += 1
         return count
     
-def countNbWord():
-        with open('Fr.csv', 'r') as csvfile:
+def countNbWord(dico):
+        with open(dico, 'r') as csvfile:
             reader = csv.DictReader(csvfile)
             count = 0
             for row in reader:
@@ -57,10 +57,10 @@ def countNbWord():
             return count
             
             
-def statJson():
-    result = {chr(i): {"PlaceInWord": {}, "NbOccurence": 0, "LetterBefore": {}, "LetterBeforeOne": {}, "Bigrams": {}, "Trigrams": {}} for i in range(ord('a'), ord('z')+1)}
+def statJson(dico,nameOutput,nameStat):
+    result = {chr(i): {"PlaceInWord": {}, "NbOccurence": 0, "LetterBefore": {}, "LetterBeforeOne": {}} for i in range(ord('a'), ord('z')+1)}
 
-    with open('output.json', 'r') as jsonfile:
+    with open(nameOutput, 'r') as jsonfile:
         data = json.load(jsonfile)
         for key in data:
             nbIteration = data[key]["NbOccurence"]
@@ -70,14 +70,14 @@ def statJson():
                 result[key]["LetterBefore"][letter] = round((data[key]["LetterBefore"][letter]/nbIteration) * 100, 3)
             for letter in data[key]["LetterBeforeOne"]:
                 result[key]["LetterBeforeOne"][letter] = round((data[key]["LetterBeforeOne"][letter]/nbIteration) * 100, 3)
-            result[key]["NbOccurence"] = round((nbIteration / countNbLetter()) *100 ,3)
-    with open('stat.json', 'w') as outfile:
+            result[key]["NbOccurence"] = round((nbIteration / countNbLetter(dico)) *100 ,3)
+    with open(nameStat, 'w') as outfile:
         json.dump(result, outfile)
 
 
 
-def getStatLetterForPostion(n):
-    with open('stat.json', 'r') as jsonfile:
+def getStatLetterForPostion(n,nameStat):
+    with open(nameStat, 'r') as jsonfile:
         data = json.load(jsonfile)
         result = {}
         for key in data:
@@ -89,8 +89,8 @@ def getStatLetterForPostion(n):
 
 
 
-def load_stats():
-    with open('stat.json', 'r') as jsonfile:
+def load_stats(nameStat):
+    with open(nameStat, 'r') as jsonfile:
         return json.load(jsonfile)
     
 def choose_letter(prob_dict):
@@ -134,16 +134,15 @@ def generate_word(stats, length):
     return word
 
 
-if __name__ == "__main__":
-    countNbWord()
-    #parseDico()
-    #statJson()
+def GenerateDataForLanguage(dico,nameOutput,nameStat):
+    parseDico(dico,nameOutput)
+    statJson(dico,nameOutput,nameStat)
     
-    stats = load_stats()
-
+    stats = load_stats(nameStat)
     temp = []
     for i in range(30):
         temp.append(generate_word(stats, random.randint(3, 10)))
     print(temp)
-    #generate_letter(stats, position=0, prev_letter=None)
-    
+
+if __name__ == "__main__":
+    GenerateDataForLanguage("output.csv","dico.json","stat.json")
