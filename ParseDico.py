@@ -6,7 +6,7 @@ def parseDico(dico,nameOutput):
     
     
     
-    result = {chr(i): {"PlaceInWord": {}, "NbOccurence": 0, "LetterBefore": {}, "LetterBeforeOne": {}} for i in range(ord('a'), ord('z')+1)}
+    result = {chr(i): {"PlaceInWord": {}, "NbOccurence": 0, "LetterBefore": {}, "Combinaison": {}, "CombinaisonPlusOne": {}, "EndWord" :0} for i in range(ord('a'), ord('z')+1)}
     with open(dico, 'r') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
@@ -31,10 +31,21 @@ def parseDico(dico,nameOutput):
                 if elt > 1:
                     if word[elt-2].lower() not in result:
                         continue
-                    if word[elt-2].lower() not in result[letter]["LetterBeforeOne"]:
-                        result[letter]["LetterBeforeOne"][word[elt-2].lower()] = 1
+                    combination = word[elt-2].lower() + word[elt-1].lower()
+                    if combination not in result[letter]["Combinaison"]:
+                        result[letter]["Combinaison"][combination] = 1
                     else:
-                        result[letter]["LetterBeforeOne"][word[elt-2].lower()] += 1
+                        result[letter]["Combinaison"][combination] += 1
+                if elt > 2:
+                    if word[elt-3].lower() not in result:
+                        continue
+                    combination = word[elt-3].lower() + word[elt-2].lower() + word[elt-1].lower()
+                    if combination not in result[letter]["CombinaisonPlusOne"]:
+                        result[letter]["CombinaisonPlusOne"][combination] = 1
+                    else:
+                        result[letter]["CombinaisonPlusOne"][combination] += 1
+                if elt == len(word)-1:
+                    result[letter]["EndWord"] += 1
     with open(nameOutput, 'w') as outfile:
         json.dump(result, outfile)
     
@@ -58,7 +69,7 @@ def countNbWord(dico):
             
             
 def statJson(dico,nameOutput,nameStat):
-    result = {chr(i): {"PlaceInWord": {}, "NbOccurence": 0, "LetterBefore": {}, "LetterBeforeOne": {}} for i in range(ord('a'), ord('z')+1)}
+    result = {chr(i): {"PlaceInWord": {}, "NbOccurence": 0, "LetterBefore": {}, "Combinaison": {},"CombinaisonPlusOne": {}, "EndWord" : 0} for i in range(ord('a'), ord('z')+1)}
 
     with open(nameOutput, 'r') as jsonfile:
         data = json.load(jsonfile)
@@ -68,9 +79,13 @@ def statJson(dico,nameOutput,nameStat):
                 result[key]["PlaceInWord"][elt] = round((data[key]["PlaceInWord"][elt]/nbIteration) * 100, 3)
             for letter in data[key]["LetterBefore"]:
                 result[key]["LetterBefore"][letter] = round((data[key]["LetterBefore"][letter]/nbIteration) * 100, 3)
-            for letter in data[key]["LetterBeforeOne"]:
-                result[key]["LetterBeforeOne"][letter] = round((data[key]["LetterBeforeOne"][letter]/nbIteration) * 100, 3)
+            for letter in data[key]["Combinaison"]:
+                result[key]["Combinaison"][letter] = round((data[key]["Combinaison"][letter]/nbIteration) * 100, 3)
+            for letter in data[key]["CombinaisonPlusOne"]:
+                result[key]["CombinaisonPlusOne"][letter] = round((data[key]["CombinaisonPlusOne"][letter]/nbIteration) * 100, 3)
             result[key]["NbOccurence"] = round((nbIteration / countNbLetter(dico)) *100 ,3)
+            result[key]["EndWord"] = round((data[key]["EndWord"] / countNbWord(dico)) *100 ,3)
+            
     with open(nameStat, 'w') as outfile:
         json.dump(result, outfile)
 
@@ -98,14 +113,19 @@ def choose_letter(prob_dict):
     probabilities = list(prob_dict.values())
     return random.choices(letters, probabilities)[0]
 
-def generate_letter(stats, position=None, prev_letter=None, prev_letter_one=None):
+def generate_letter(stats, position=None, word=None):
     letter_probs = {}
-    
+    endWord = False
+    prev_letter = word[-1] if word else None
+    prev_letter_one = word[-2] if len(word) > 1 else None
+    prev_letter_one_two = word[-3] if len(word) > 2 else None
     for letter, data in stats.items():
         prob = data["NbOccurence"]
         
         if position is not None:
             prob *= data["PlaceInWord"].get(str(position), 0)
+            
+    
         
         if prev_letter is not None:
             d = data["LetterBefore"].get(prev_letter, 0)
@@ -115,22 +135,27 @@ def generate_letter(stats, position=None, prev_letter=None, prev_letter_one=None
                 prob *= data["LetterBefore"].get(prev_letter, 0)
             
         if prev_letter_one is not None:
-            d= data["LetterBeforeOne"].get(prev_letter_one, 0)
+            d= data["Combinaison"].get(prev_letter_one+prev_letter, 0)
             if d <=1.0:
                 prob *= 0.1
             else:
-                prob *= data["LetterBeforeOne"].get(prev_letter_one, 0)
+                prob *= data["Combinaison"].get(prev_letter_one+prev_letter, 0)
         
         letter_probs[letter] = prob
     
-    return choose_letter(letter_probs)
+    l = choose_letter(letter_probs)
+    StatEndWord = stats[l]["EndWord"]
+    endWord = random.choices([True, False], [StatEndWord, 100 - StatEndWord])[0]
+    return l, endWord
   
 def generate_word(stats, length):
     word = ""
     for i in range(length):
-        prev_letter = word[-1] if word else None
-        prev_letter_one = word[-2] if len(word) > 1 else None
-        word += generate_letter(stats, position=i, prev_letter=prev_letter, prev_letter_one=prev_letter_one)
+        letter, endWord =  generate_letter(stats, position=i, word=word)
+        letter = letter.upper() if i == 0 else letter
+        word += letter
+        if endWord and i > 2:
+            break
     return word
 
 def harmoniseStat(nameStat):
@@ -139,11 +164,13 @@ def harmoniseStat(nameStat):
         for key in data:
             keys_to_delete = [letter for letter in data[key]["LetterBefore"] if data[key]["LetterBefore"][letter] <= 1.0]
             for letter in keys_to_delete:
-                del data[key]["LetterBefore"][letter]
+                #del data[key]["LetterBefore"][letter]
+                data[key]["LetterBefore"][letter] = 0.0
             
-            keys_to_delete_one = [letter for letter in data[key]["LetterBeforeOne"] if data[key]["LetterBeforeOne"][letter] <= 1.0]
+            keys_to_delete_one = [letter for letter in data[key]["Combinaison"] if data[key]["Combinaison"][letter] <= 1.0]
             for letter in keys_to_delete_one:
-                del data[key]["LetterBeforeOne"][letter]
+                #del data[key]["Combinaison"][letter]
+                data[key]["Combinaison"][letter] = 0.0
                 
     with open(nameStat, 'w') as outfile:
         json.dump(data, outfile)
