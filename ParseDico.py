@@ -141,8 +141,16 @@ def generate_letter(stats, position=None, word=None):
             else:
                 prob *= data["Combinaison"].get(prev_letter_one+prev_letter, 0)
         
+        if prev_letter_one_two is not None:
+            d = data["CombinaisonPlusOne"].get(prev_letter_one_two+prev_letter_one+prev_letter, 0)
+            if d <=1.0:
+                prob *= 0.1
+            else:
+                prob *= data["CombinaisonPlusOne"].get(prev_letter_one_two+prev_letter_one+prev_letter, 0)
+        
         letter_probs[letter] = prob
-    
+        
+    print(letter_probs)
     l = choose_letter(letter_probs)
     StatEndWord = stats[l]["EndWord"]
     endWord = random.choices([True, False], [StatEndWord, 100 - StatEndWord])[0]
@@ -172,6 +180,12 @@ def harmoniseStat(nameStat):
                 #del data[key]["Combinaison"][letter]
                 data[key]["Combinaison"][letter] = 0.0
                 
+            keys_to_delete_two = [letter for letter in data[key]["CombinaisonPlusOne"] if data[key]["CombinaisonPlusOne"][letter] <= 1.0]
+            for letter in keys_to_delete_two:
+                #del data[key]["CombinaisonPlusOne"][letter]
+                data[key]["CombinaisonPlusOne"][letter] = 0.0
+            
+                
     with open(nameStat, 'w') as outfile:
         json.dump(data, outfile)
         
@@ -189,4 +203,4 @@ def GenerateDataForLanguage(dico,nameOutput,nameStat):
     print(temp)
 
 if __name__ == "__main__":
-    GenerateDataForLanguage("output.csv","dico.json","stat.json")
+    GenerateDataForLanguage("French.csv","dico.json","stat.json")
