@@ -133,10 +133,27 @@ def generate_word(stats, length):
         word += generate_letter(stats, position=i, prev_letter=prev_letter, prev_letter_one=prev_letter_one)
     return word
 
-
+def harmoniseStat(nameStat):
+    with open(nameStat, 'r') as jsonfile:
+        data = json.load(jsonfile)
+        for key in data:
+            keys_to_delete = [letter for letter in data[key]["LetterBefore"] if data[key]["LetterBefore"][letter] <= 1.0]
+            for letter in keys_to_delete:
+                del data[key]["LetterBefore"][letter]
+            
+            keys_to_delete_one = [letter for letter in data[key]["LetterBeforeOne"] if data[key]["LetterBeforeOne"][letter] <= 1.0]
+            for letter in keys_to_delete_one:
+                del data[key]["LetterBeforeOne"][letter]
+                
+    with open(nameStat, 'w') as outfile:
+        json.dump(data, outfile)
+        
+        
 def GenerateDataForLanguage(dico,nameOutput,nameStat):
     parseDico(dico,nameOutput)
     statJson(dico,nameOutput,nameStat)
+    
+    harmoniseStat(nameStat)
     
     stats = load_stats(nameStat)
     temp = []
