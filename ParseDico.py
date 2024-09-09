@@ -251,4 +251,4 @@ def GenerateDataForLanguage(dico, nameOutput, nameStat):
 
 
 if __name__ == "__main__":
-    GenerateDataForLanguage("english.csv", "dico.json", "stat.json")
+    GenerateDataForLanguage("output.csv", "dico.json", "stat.json")
