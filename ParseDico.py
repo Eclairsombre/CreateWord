@@ -8,7 +8,7 @@ def parseDico(dico, nameOutput):
     result = {chr(i): {"PlaceInWord": {}, "NbOccurence": 0, "LetterBefore": {}, "Combinaison": {
     }, "CombinaisonPlusOne": {}, "EndWord": 0} for i in range(ord('a'), ord('z')+1)}
     prefixe = {}
-    with open(dico, 'r') as csvfile:
+    with open('Dico/' + dico, 'r') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             word = row['word']
@@ -55,14 +55,14 @@ def parseDico(dico, nameOutput):
                         result[letter]["CombinaisonPlusOne"][combination] += 1
                 if elt == len(word)-1:
                     result[letter]["EndWord"] += 1
-    with open(nameOutput, 'w') as outfile:
+    with open('Stats/' + nameOutput, 'w') as outfile:
         json.dump(result, outfile)
-    with open("Prefixe" + nameOutput, 'w') as outfile:
+    with open("Stats/Prefixe" + nameOutput, 'w') as outfile:
         json.dump(prefixe, outfile)
 
 
 def countNbLetter(dico):
-    with open(dico, 'r') as csvfile:
+    with open('Dico/' + dico, 'r') as csvfile:
         reader = csv.DictReader(csvfile)
         count = 0
         for row in reader:
@@ -73,7 +73,7 @@ def countNbLetter(dico):
 
 
 def countNbWord(dico):
-    with open(dico, 'r') as csvfile:
+    with open('Dico/' + dico, 'r') as csvfile:
         reader = csv.DictReader(csvfile)
         count = 0
         for row in reader:
@@ -85,7 +85,7 @@ def statJson(dico, nameOutput, nameStat):
     result = {chr(i): {"PlaceInWord": {}, "NbOccurence": 0, "LetterBefore": {}, "Combinaison": {
     }, "CombinaisonPlusOne": {}, "EndWord": 0} for i in range(ord('a'), ord('z')+1)}
 
-    with open(nameOutput, 'r') as jsonfile:
+    with open('Stats/' + nameOutput, 'r') as jsonfile:
         data = json.load(jsonfile)
         for key in data:
             nbIteration = data[key]["NbOccurence"]
@@ -106,19 +106,19 @@ def statJson(dico, nameOutput, nameStat):
             result[key]["EndWord"] = round(
                 (data[key]["EndWord"] / countNbWord(dico)) * 100, 3)
 
-    with open(nameStat, 'w') as outfile:
+    with open('Stats/' + nameStat, 'w') as outfile:
         json.dump(result, outfile)
 
-    with open("Prefixe" + nameOutput, 'r') as jsonfile:
+    with open("Stats/Prefixe" + nameOutput, 'r') as jsonfile:
         data = json.load(jsonfile)
         for key in data:
             data[key] = round((data[key] / countNbWord(dico)) * 100, 3)
-    with open("Prefixe" + nameStat, 'w') as outfile:
+    with open("Stats/Prefixe" + nameStat, 'w') as outfile:
         json.dump(data, outfile)
 
 
 def getStatLetterForPostion(n, nameStat):
-    with open(nameStat, 'r') as jsonfile:
+    with open('Stats/'  + nameStat, 'r') as jsonfile:
         data = json.load(jsonfile)
         result = {}
         for key in data:
@@ -128,7 +128,7 @@ def getStatLetterForPostion(n, nameStat):
 
 
 def load_stats(nameStat):
-    with open(nameStat, 'r') as jsonfile:
+    with open('Stats/' + nameStat, 'r') as jsonfile:
         return json.load(jsonfile)
 
 
@@ -204,7 +204,7 @@ def generate_word(stats, prefixe, length):
 
 
 def harmoniseStat(nameStat):
-    with open(nameStat, 'r') as jsonfile:
+    with open('Stats/' + nameStat, 'r') as jsonfile:
         data = json.load(jsonfile)
         for key in data:
             keys_to_delete = [letter for letter in data[key]
@@ -225,10 +225,10 @@ def harmoniseStat(nameStat):
                 # del data[key]["CombinaisonPlusOne"][letter]
                 data[key]["CombinaisonPlusOne"][letter] = 0.0
 
-    with open(nameStat, 'w') as outfile:
+    with open('Stats/' + nameStat, 'w') as outfile:
         json.dump(data, outfile)
 
-    with open("Prefixe" + nameStat, 'r') as jsonfile:
+    with open("Stats/Prefixe" + nameStat, 'r') as jsonfile:
         data = json.load(jsonfile)
         keys_to_delete = [letter for letter in data if data[letter] <= 1.0]
         for letter in keys_to_delete:
