@@ -4,6 +4,12 @@ import random
 
 
 def parseDico(dico, nameOutput):
+    """Parse the dico and create a json file with the stats of the dico
+
+    Args:
+        dico (String): The name of the dico
+        nameOutput (_type_): The name of the output file
+    """
 
     result = {chr(i): {"PlaceInWord": {}, "NbOccurence": 0, "LetterBefore": {}, "Combinaison": {
     }, "CombinaisonPlusOne": {}, "EndWord": 0} for i in range(ord('a'), ord('z')+1)}
@@ -62,6 +68,14 @@ def parseDico(dico, nameOutput):
 
 
 def countNbLetter(dico):
+    """Count the number of letter in the dico
+
+    Args:
+        dico (String): THe name of the dico
+
+    Returns:
+        Int: The number of letter in the dico
+    """
     with open('Dico/' + dico, 'r') as csvfile:
         reader = csv.DictReader(csvfile)
         count = 0
@@ -73,6 +87,14 @@ def countNbLetter(dico):
 
 
 def countNbWord(dico):
+    """Count the number of word in the dico
+
+    Args:
+        dico (String): The name of the dico
+
+    Returns:
+        Int: The number of word in the dico
+    """
     with open('Dico/' + dico, 'r') as csvfile:
         reader = csv.DictReader(csvfile)
         count = 0
@@ -82,6 +104,13 @@ def countNbWord(dico):
 
 
 def statJson(dico, nameOutput, nameStat):
+    """Create the stat json file with the percentage of each letter
+
+    Args:
+        dico (String): The name of the dico
+        nameOutput (String): The name of the output file
+        nameStat (String): The name of the stat file
+    """
     result = {chr(i): {"PlaceInWord": {}, "NbOccurence": 0, "LetterBefore": {}, "Combinaison": {
     }, "CombinaisonPlusOne": {}, "EndWord": 0} for i in range(ord('a'), ord('z')+1)}
 
@@ -118,6 +147,15 @@ def statJson(dico, nameOutput, nameStat):
 
 
 def getStatLetterForPostion(n, nameStat):
+    """Get the stat of the letter for a specific position
+
+    Args:
+        n (Int): The position
+        nameStat (String): The name of the stat file
+
+    Returns:
+        Float: The percentage of the letter for the position
+    """
     with open('Stats/'  + nameStat, 'r') as jsonfile:
         data = json.load(jsonfile)
         result = {}
@@ -128,17 +166,43 @@ def getStatLetterForPostion(n, nameStat):
 
 
 def load_stats(nameStat):
+    """Load the stat file
+
+    Args:
+        nameStat (String): The name of the stat file
+
+    Returns:
+        JsonFile: The stat file
+    """
     with open('Stats/' + nameStat, 'r') as jsonfile:
         return json.load(jsonfile)
 
 
 def choose_letter(prob_dict):
+    """Choose a letter based on the probability
+
+    Args:
+        prob_dict (Dictionnary): The probability of each letter
+
+    Returns:
+        Char: The letter chosen
+    """
     letters = list(prob_dict.keys())
     probabilities = list(prob_dict.values())
     return random.choices(letters, probabilities)[0]
 
 
 def generate_letter(stats, position=None, word=None):
+    """Generate a letter based on the stats
+
+    Args:
+        stats (Dictionnary): The stats
+        position (Int, optional): The potion of the letter to generate. Defaults to None.
+        word (String, optional): The word who are currently generating. Defaults to None.
+
+    Returns:
+        Char: The letter generated
+    """
     letter_probs = {}
     endWord = False
     prev_letter = word[-1] if word else None
@@ -183,6 +247,14 @@ def generate_letter(stats, position=None, word=None):
 
 
 def generatePrefixe(stats):
+    """Generate the prefixe of the word
+
+    Args:
+        stats (Dictionnary): The stats of the prefixe
+
+    Returns:
+        String: The prefixe generated
+    """
     letter_probs = {}
     for letter, data in stats.items():
         prob = data
@@ -192,6 +264,16 @@ def generatePrefixe(stats):
 
 
 def generate_word(stats, prefixe, length):
+    """Generate a word
+
+    Args:
+        stats (Dictionnary): The stats of the dico for the word
+        prefixe (Dictionnary): The stats of the prefixe
+        length (Int): The length of the word
+
+    Returns:
+        String: The word generated
+    """
     word = ""
 
     word += generatePrefixe(prefixe)
@@ -204,6 +286,11 @@ def generate_word(stats, prefixe, length):
 
 
 def harmoniseStat(nameStat):
+    """Harmonise the stat file  
+
+    Args:
+        nameStat (String): The name of the stat file
+    """
     with open('Stats/' + nameStat, 'r') as jsonfile:
         data = json.load(jsonfile)
         for key in data:
@@ -237,6 +324,14 @@ def harmoniseStat(nameStat):
 
 
 def GenerateDataForLanguage(dico, nameOutput, nameStat):
+    """Generate the data for the language
+
+    Args:
+        dico (String): The name of the dico
+        nameOutput (String): The name of the output file
+        nameStat (String): The name of the stat file
+    """
+    
     parseDico(dico, nameOutput)
     statJson(dico, nameOutput, nameStat)
 
